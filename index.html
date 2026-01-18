@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jujutsu Fighters | Maronn Studios</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/menu.css">
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="screen">
+        <div class="splash-container">
+            <div class="logo-animation">
+                <div class="logo-text">MARONN</div>
+                <div class="logo-subtext">STUDIOS</div>
+                <div class="cursed-energy"></div>
+            </div>
+            <div class="loading">
+                <div class="loading-bar">
+                    <div class="loading-progress"></div>
+                </div>
+                <div class="loading-text">Initializing Cursed Energy...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="main-menu" class="screen hidden">
+        <div class="menu-bg"></div>
+        <div class="menu-content">
+            <h1 class="title">JUJUTSU FIGHTERS</h1>
+            
+            <div class="menu-options">
+                <button class="menu-btn" id="fight-btn">
+                    <span class="btn-text">FIGHT</span>
+                    <div class="btn-glow"></div>
+                </button>
+                
+                <button class="menu-btn" id="characters-btn">
+                    <span class="btn-text">CHARACTERS</span>
+                    <div class="btn-glow"></div>
+                </button>
+                
+                <button class="menu-btn" id="settings-btn">
+                    <span class="btn-text">SETTINGS</span>
+                    <div class="btn-glow"></div>
+                </button>
+                
+                <button class="menu-btn" id="quit-btn">
+                    <span class="btn-text">QUIT</span>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+            
+            <div class="current-character">
+                <div class="character-card">
+                    <div class="character-preview" id="current-character"></div>
+                    <div class="character-info">
+                        <h3>Yuji Itadori (Young)</h3>
+                        <div class="character-grade grade-3">GRADE 3</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="profile-btn" id="profile-btn">
+            <div class="avatar" id="user-avatar">
+                <span class="avatar-letter">P</span>
+            </div>
+            <span class="username" id="username">Player_01</span>
+        </button>
+        
+        <div class="version">v1.0.0 | Maronn Studios</div>
+    </div>
+
+    <!-- Mode Selection -->
+    <div id="mode-select" class="screen hidden">
+        <div class="mode-container">
+            <h2>SELECT MODE</h2>
+            <div class="mode-options">
+                <button class="mode-option" id="offline-mode">
+                    <div class="mode-icon">🤖</div>
+                    <div class="mode-title">OFFLINE</div>
+                    <div class="mode-desc">Practice vs AI</div>
+                </button>
+                
+                <button class="mode-option" id="online-mode">
+                    <div class="mode-icon">🌐</div>
+                    <div class="mode-title">ONLINE</div>
+                    <div class="mode-desc">Battle Players</div>
+                </button>
+            </div>
+            <button class="back-btn" id="mode-back">BACK</button>
+        </div>
+    </div>
+
+    <!-- Online Menu -->
+    <div id="online-menu" class="screen hidden">
+        <div class="online-container">
+            <h2>ONLINE BATTLE</h2>
+            <div class="online-options">
+                <button class="online-option" id="create-room">
+                    <div class="option-icon">➕</div>
+                    <div class="option-title">CREATE ROOM</div>
+                    <div class="option-desc">Host a private match</div>
+                </button>
+                
+                <button class="online-option" id="join-room">
+                    <div class="option-icon">🚪</div>
+                    <div class="option-title">JOIN ROOM</div>
+                    <div class="option-desc">Enter room code</div>
+                </button>
+            </div>
+            <button class="back-btn" id="online-back">BACK</button>
+        </div>
+    </div>
+
+    <!-- Join Room Modal -->
+    <div id="join-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>JOIN ROOM</h3>
+            <input type="text" id="room-code" placeholder="Enter 6-digit code" maxlength="6">
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" id="join-confirm">JOIN</button>
+                <button class="modal-btn cancel" id="join-cancel">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lobby Screen -->
+    <div id="lobby-screen" class="screen hidden">
+        <div class="lobby-container">
+            <div class="lobby-header">
+                <h2>BATTLE LOBBY</h2>
+                <div class="room-info">
+                    <span>ROOM CODE:</span>
+                    <span class="room-code" id="lobby-code">------</span>
+                </div>
+            </div>
+            
+            <div class="lobby-players">
+                <div class="player-slot player-1">
+                    <div class="player-header">
+                        <div class="player-avatar" id="player1-avatar">
+                            <span class="avatar-letter">H</span>
+                        </div>
+                        <div class="player-name" id="player1-name">Host</div>
+                        <div class="player-status" id="player1-status">SELECTING</div>
+                    </div>
+                    <div class="character-select" id="player1-select">
+                        <!-- Character selection will be here -->
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="player-slot player-2">
+                    <div class="player-header">
+                        <div class="player-avatar" id="player2-avatar">
+                            <span class="avatar-letter">?</span>
+                        </div>
+                        <div class="player-name" id="player2-name">Waiting...</div>
+                        <div class="player-status" id="player2-status">WAITING</div>
+                    </div>
+                    <div class="character-select" id="player2-select">
+                        <!-- Character selection will be here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lobby-controls">
+                <button class="ready-btn" id="ready-btn">
+                    <span>READY</span>
+                    <div class="ready-indicator"></div>
+                </button>
+                <button class="leave-btn" id="leave-lobby">LEAVE LOBBY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Character Selection -->
+    <div id="character-select" class="screen hidden">
+        <div class="select-container">
+            <h2>SELECT CHARACTER</h2>
+            <div class="character-grid" id="character-grid">
+                <!-- Characters will be loaded here -->
+            </div>
+            <div class="character-info" id="selected-character-info">
+                <h3 id="char-name">Yuji Itadori (Young)</h3>
+                <div class="char-grade" id="char-grade">GRADE 3</div>
+                <div class="char-abilities" id="char-abilities">
+                    <div class="ability">Divergent Fist</div>
+                    <div class="ability">Black Flash</div>
+                    <div class="ability">Small Knife</div>
+                </div>
+            </div>
+            <div class="select-controls">
+                <button class="select-btn" id="select-confirm">SELECT</button>
+                <button class="back-btn" id="select-back">BACK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen hidden">
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- Game HUD -->
+        <div class="hud">
+            <!-- Player 1 HUD -->
+            <div class="player-hud left">
+                <div class="hud-avatar" id="hud-avatar-1">
+                    <span class="avatar-letter">P1</span>
+                </div>
+                <div class="hud-info">
+                    <div class="hud-name" id="hud-name-1">Player 1</div>
+                    <div class="health-bar">
+                        <div class="health-fill" id="health-1"></div>
+                        <div class="health-text">100/100</div>
+                    </div>
+                    <div class="awake-bar">
+                        <div class="awake-fill" id="awake-1"></div>
+                        <span class="awake-text">DOMAIN</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timer and Round -->
+            <div class="game-info">
+                <div class="timer" id="round-timer">99</div>
+                <div class="rounds">
+                    <div class="round-indicator active"></div>
+                    <div class="round-indicator"></div>
+                    <div class="round-indicator"></div>
+                </div>
+            </div>
+            
+            <!-- Player 2 HUD -->
+            <div class="player-hud right">
+                <div class="hud-avatar" id="hud-avatar-2">
+                    <span class="avatar-letter">P2</span>
+                </div>
+                <div class="hud-info">
+                    <div class="hud-name" id="hud-name-2">Player 2</div>
+                    <div class="health-bar">
+                        <div class="health-fill" id="health-2"></div>
+                        <div class="health-text">100/100</div>
+                    </div>
+                    <div class="awake-bar">
+                        <div class="awake-fill" id="awake-2"></div>
+                        <span class="awake-text">DOMAIN</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ability Bar -->
+        <div class="ability-bar">
+            <div class="ability-slot" data-ability="1">
+                <div class="ability-key">1</div>
+                <div class="ability-name">Divergent Fist</div>
+                <div class="cooldown-overlay"></div>
+            </div>
+            <div class="ability-slot" data-ability="2">
+                <div class="ability-key">2</div>
+                <div class="ability-name">Black Flash</div>
+                <div class="cooldown-overlay"></div>
+            </div>
+            <div class="ability-slot" data-ability="3">
+                <div class="ability-key">3</div>
+                <div class="ability-name">Small Knife</div>
+                <div class="cooldown-overlay"></div>
+            </div>
+            <div class="ability-slot domain" data-ability="4">
+                <div class="ability-key">4</div>
+                <div class="ability-name">DOMAIN</div>
+                <div class="cooldown-overlay"></div>
+            </div>
+        </div>
+        
+        <!-- Countdown -->
+        <div id="countdown" class="hidden">
+            <div class="countdown-number">3</div>
+        </div>
+        
+        <!-- Pause Menu -->
+        <div id="pause-menu" class="hidden">
+            <div class="pause-content">
+                <h2>PAUSED</h2>
+                <button class="pause-option" id="resume-btn">RESUME</button>
+                <button class="pause-option" id="quit-match">QUIT MATCH</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Screen -->
+    <div id="profile-screen" class="screen hidden">
+        <div class="profile-container">
+            <h2>PROFILE</h2>
+            
+            <div class="profile-content">
+                <div class="profile-edit">
+                    <div class="form-group">
+                        <label for="profile-username">USERNAME</label>
+                        <input type="text" id="profile-username" maxlength="16">
+                        <div class="error" id="username-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>AVATAR</label>
+                        <div class="avatar-upload">
+                            <div class="avatar-preview" id="avatar-preview">
+                                <span class="avatar-letter" id="preview-letter">P</span>
+                            </div>
+                            <input type="file" id="avatar-input" accept="image/*">
+                            <label for="avatar-input" class="upload-btn">CHOOSE IMAGE</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-stats">
+                    <h3>STATISTICS</h3>
+                    <div class="stats-grid">
+                        <div class="stat">
+                            <div class="stat-label">Wins</div>
+                            <div class="stat-value" id="stat-wins">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Losses</div>
+                            <div class="stat-value" id="stat-losses">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Win Rate</div>
+                            <div class="stat-value" id="stat-winrate">0%</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Total Fights</div>
+                            <div class="stat-value" id="stat-fights">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-controls">
+                    <button class="save-btn" id="save-profile">SAVE</button>
+                    <button class="back-btn" id="profile-back">BACK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Characters Screen -->
+    <div id="characters-screen" class="screen hidden">
+        <div class="characters-container">
+            <h2>CHARACTERS</h2>
+            <div class="characters-list" id="characters-list">
+                <!-- Characters will be loaded here -->
+            </div>
+            <button class="back-btn" id="characters-back">BACK</button>
+        </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen hidden">
+        <div class="settings-container">
+            <h2>SETTINGS</h2>
+            
+            <div class="settings-tabs">
+                <button class="tab-btn active" data-tab="controls">CONTROLS</button>
+                <button class="tab-btn" data-tab="gameplay">GAMEPLAY</button>
+                <button class="tab-btn" data-tab="audio">AUDIO</button>
+            </div>
+            
+            <div class="settings-content">
+                <div class="tab-content active" id="controls-tab">
+                    <div class="control-setting">
+                        <span>Move Left:</span>
+                        <kbd class="key">A</kbd>
+                    </div>
+                    <div class="control-setting">
+                        <span>Move Right:</span>
+                        <kbd class="key">D</kbd>
+                    </div>
+                    <div class="control-setting">
+                        <span>Jump:</span>
+                        <kbd class="key">W</kbd>
+                    </div>
+                    <div class="control-setting">
+                        <span>Crouch:</span>
+                        <kbd class="key">S</kbd>
+                    </div>
+                    <div class="control-setting">
+                        <span>Attack:</span>
+                        <kbd class="key">Left Click</kbd>
+                    </div>
+                    <div class="control-setting">
+                        <span>Dash:</span>
+                        <kbd class="key">Right Click</kbd>
+                    </div>
+                    <div class="control-setting">
+                        <span>Block:</span>
+                        <kbd class="key">F</kbd>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="gameplay-tab">
+                    <div class="setting">
+                        <label for="round-time">Round Time (seconds)</label>
+                        <select id="round-time">
+                            <option value="99">99</option>
+                            <option value="120">120</option>
+                            <option value="60">60</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label>
+                            <input type="checkbox" id="blood-effects" checked>
+                            Blood Effects
+                        </label>
+                    </div>
+                    <div class="setting">
+                        <label>
+                            <input type="checkbox" id="screen-shake" checked>
+                            Screen Shake
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="audio-tab">
+                    <div class="setting">
+                        <label for="master-volume">Master Volume</label>
+                        <input type="range" id="master-volume" min="0" max="100" value="100">
+                    </div>
+                    <div class="setting">
+                        <label for="music-volume">Music Volume</label>
+                        <input type="range" id="music-volume" min="0" max="100" value="80">
+                    </div>
+                    <div class="setting">
+                        <label for="sfx-volume">SFX Volume</label>
+                        <input type="range" id="sfx-volume" min="0" max="100" value="100">
+                    </div>
+                </div>
+            </div>
+            
+            <button class="back-btn" id="settings-back">BACK</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/characters.js"></script>
+    <script src="js/network.js"></script>
+    <script src="js/lobby.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
