@@ -1345,66 +1345,137 @@ class Player {
         ctx.restore();
     }
     
+    // В классе Player заменяем метод drawCharacter:
+
     drawCharacter(ctx) {
-        // Временная отрисовка персонажа (в реальной игре здесь были бы спрайты)
-        const color = this.character.color || 'linear-gradient(45deg, #ff0033, #ff6600)';
-        
-        // Тело
-        const gradient = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
-        gradient.addColorStop(0, this.side === 'left' ? '#ff0033' : '#00e5ff');
-        gradient.addColorStop(1, this.side === 'left' ? '#cc0000' : '#0066cc');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        
-        // Детали в зависимости от состояния
-        ctx.fillStyle = '#000';
-        
-        switch(this.state) {
-            case 'attack':
-                // Анимация атаки
-                ctx.fillStyle = '#ffcc00';
-                ctx.fillRect(
-                    this.facing === 'right' ? this.x + this.width : this.x - 30,
-                    this.y + this.height/2 - 10,
-                    30, 20
-                );
-                break;
-                
-            case 'hurt':
-                // Анимация получения урона
-                ctx.fillStyle = '#ff0000';
-                ctx.fillRect(
-                    this.x + this.width/2 - 10,
-                    this.y + this.height/2 - 10,
-                    20, 20
-                );
-                break;
-                
-            case 'block':
-                // Анимация блока
-                ctx.fillStyle = '#00ffff';
-                ctx.fillRect(
-                    this.facing === 'right' ? this.x - 10 : this.x + this.width,
-                    this.y,
-                    10, this.height
-                );
-                break;
-                
-            case 'dash':
-                // Эффект даша
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                for (let i = 0; i < 3; i++) {
-                    ctx.fillRect(
-                        this.x - (this.facing === 'right' ? -i * 20 : i * 20),
-                        this.y,
-                        this.width,
-                        this.height
-                    );
-                }
-                break;
+    // Сохраняем контекст
+        ctx.save();
+    
+    // Определяем состояние для анимации
+        let spriteState = this.state;
+        let animationFrame = Math.floor(Date.now() / 100) % 60; // Анимация по времени
+    
+    // Получаем спрайт для текущего состояния
+        const sprite = Sprites.getCharacterSprite(
+            this.character.id, 
+            spriteState,
+            animationFrame
+        );
+    
+    // Получаем палитру персонажа
+        const palette = Sprites.getCharacterPalette(this.character.id);
+        sprite.palette = palette;
+    
+    // Определяем положение для отрисовки
+        const drawX = this.x;
+        const drawY = this.y;
+    
+    // Рисуем спрайт
+        Sprites.drawSprite(
+            ctx,
+            sprite,
+            drawX,
+            drawY,
+            Sprites.SCALE,
+            this.facing === 'left' // Зеркально если смотрит влево
+        );
+    
+    // Эффекты способностей
+        if (this.state === 'attack' && this.isAttacking) {
+            this.drawAttackEffect(ctx);
         }
+    
+    // Эффект получения урона
+        if (this.state === 'hurt') {
+            this.drawHurtEffect(ctx);
+        }
+    
+    // Эффект блока
+        if (this.state === 'block') {
+            this.drawBlockEffect(ctx);
+        }
+    
+    // Имя игрока
+        this.drawName(ctx);
+    
+    // Восстанавливаем контекст
+        ctx.restore();
     }
+
+// Добавляем новые методы в класс Player:
+
+drawAttackEffect(ctx) {
+    const effect = Sprites.effects.divergent_fist;
+    const effectX = this.facing === 'right' ? 
+        this.x + this.width : 
+        this.x - effect[0].length * Sprites.SCALE;
+    const effectY = this.y + this.height / 2 - (effect.length * Sprites.SCALE) / 2;
+    
+    // Создаем палитру для эффекта
+    const effectPalette = [
+        'rgba(0,0,0,0)',    // 0: прозрачный
+        'rgba(0,0,0,0)',    // 1: прозрачный  
+        'rgba(0,0,0,0)',    // 2: прозрачный
+        '#ffcc00',          // 3: желтый для эффекта
+        '#ff9900'           // 4: оранжевый
+    ];
+    effect.palette = effectPalette;
+    
+    Sprites.drawSprite(ctx, effect, effectX, effectY, Sprites.SCALE);
+}
+
+drawHurtEffect(ctx) {
+    // Красная вспышка при получении урона
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+}
+
+drawBlockEffect(ctx) {
+    // Голубое свечение при блоке
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+    ctx.fillRect(this.x - 5, this.y - 5, this.width + 10, this.height + 10);
+    
+    // Рисуем эффект блока из спрайтов
+    const blockEffect = Sprites.yuji_young.block;
+    const effectWidth = blockEffect[0].length * Sprites.SCALE;
+    const effectX = this.facing === 'right' ? 
+        this.x - effectWidth : 
+        this.x + this.width;
+    
+    Sprites.drawSprite(
+        ctx, 
+        blockEffect, 
+        effectX, 
+        this.y, 
+        Sprites.SCALE,
+        this.facing === 'right'
+    );
+}
+
+drawName(ctx) {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 14px "Pixelify Sans", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 3;
+    
+    // Рамка вокруг имени
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    const nameWidth = ctx.measureText(this.username).width;
+    ctx.fillRect(
+        this.x + this.width/2 - nameWidth/2 - 5,
+        this.y - 25,
+        nameWidth + 10,
+        20
+    );
+    
+    // Само имя
+    ctx.fillStyle = this.side === 'left' ? '#ff6666' : '#66aaff';
+    ctx.fillText(this.username, this.x + this.width/2, this.y - 10);
+    
+    ctx.shadowBlur = 0;
+}
     
     drawHitbox(ctx) {
         // Для отладки

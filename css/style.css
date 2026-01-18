@@ -394,6 +394,8 @@ body {
     border-color: #00e5ff;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
+
 /* ===== ANIMATIONS ===== */
 @keyframes fadeIn {
     from { opacity: 0; }
