@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jujutsu Fighters | Maronn Studios</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/menu.css">
     <link rel="stylesheet" href="css/game.css">
@@ -123,11 +130,35 @@
     <div id="join-modal" class="modal hidden">
         <div class="modal-content">
             <h3>JOIN ROOM</h3>
-            <input type="text" id="room-code" placeholder="Enter 6-digit code" maxlength="6">
+            <input type="text" id="room-code" placeholder="Enter 6-digit code" maxlength="6" style="text-transform: uppercase">
             <div class="modal-buttons">
                 <button class="modal-btn confirm" id="join-confirm">JOIN</button>
                 <button class="modal-btn cancel" id="join-cancel">CANCEL</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Room Created Modal -->
+    <div id="room-created-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>ROOM CREATED</h3>
+            <div class="room-code-display">
+                <span>ROOM CODE:</span>
+                <div class="code" id="created-room-code">------</div>
+                <div class="share-info">Share this code with your friend</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" id="copy-room-code">COPY CODE</button>
+                <button class="modal-btn cancel" id="close-room-modal">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div id="connection-status" class="hidden">
+        <div class="status-indicator connecting">
+            <div class="status-dot"></div>
+            <span class="status-text">Connecting...</span>
         </div>
     </div>
 
@@ -139,20 +170,31 @@
                 <div class="room-info">
                     <span>ROOM CODE:</span>
                     <span class="room-code" id="lobby-code">------</span>
+                    <button class="copy-btn" id="copy-lobby-code" title="Copy to clipboard">📋</button>
+                </div>
+                <div class="connection-status-mini">
+                    <div class="status-dot connected"></div>
+                    <span>Connected</span>
                 </div>
             </div>
             
             <div class="lobby-players">
                 <div class="player-slot player-1">
                     <div class="player-header">
+                        <div class="player-badge host">HOST</div>
                         <div class="player-avatar" id="player1-avatar">
                             <span class="avatar-letter">H</span>
                         </div>
                         <div class="player-name" id="player1-name">Host</div>
                         <div class="player-status" id="player1-status">SELECTING</div>
                     </div>
-                    <div class="character-select" id="player1-select">
-                        <!-- Character selection will be here -->
+                    <div class="character-display" id="player1-character">
+                        <div class="character-portrait"></div>
+                        <div class="character-name">Not Selected</div>
+                    </div>
+                    <div class="ready-status">
+                        <div class="ready-indicator" id="player1-ready"></div>
+                        <span>READY</span>
                     </div>
                 </div>
                 
@@ -160,15 +202,28 @@
                 
                 <div class="player-slot player-2">
                     <div class="player-header">
+                        <div class="player-badge guest">GUEST</div>
                         <div class="player-avatar" id="player2-avatar">
                             <span class="avatar-letter">?</span>
                         </div>
                         <div class="player-name" id="player2-name">Waiting...</div>
                         <div class="player-status" id="player2-status">WAITING</div>
                     </div>
-                    <div class="character-select" id="player2-select">
-                        <!-- Character selection will be here -->
+                    <div class="character-display" id="player2-character">
+                        <div class="character-portrait"></div>
+                        <div class="character-name">Not Selected</div>
                     </div>
+                    <div class="ready-status">
+                        <div class="ready-indicator" id="player2-ready"></div>
+                        <span>READY</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="character-selection">
+                <h3>SELECT YOUR FIGHTER</h3>
+                <div class="character-options" id="lobby-characters">
+                    <!-- Character options will be added here -->
                 </div>
             </div>
             
@@ -178,6 +233,18 @@
                     <div class="ready-indicator"></div>
                 </button>
                 <button class="leave-btn" id="leave-lobby">LEAVE LOBBY</button>
+                <button class="start-btn hidden" id="start-game">START GAME</button>
+            </div>
+            
+            <div class="lobby-chat">
+                <h4>CHAT</h4>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Chat messages will appear here -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="Type a message..." maxlength="100">
+                    <button id="send-chat">SEND</button>
+                </div>
             </div>
         </div>
     </div>
@@ -190,12 +257,34 @@
                 <!-- Characters will be loaded here -->
             </div>
             <div class="character-info" id="selected-character-info">
-                <h3 id="char-name">Yuji Itadori (Young)</h3>
-                <div class="char-grade" id="char-grade">GRADE 3</div>
-                <div class="char-abilities" id="char-abilities">
-                    <div class="ability">Divergent Fist</div>
-                    <div class="ability">Black Flash</div>
-                    <div class="ability">Small Knife</div>
+                <div class="character-preview-large" id="character-preview"></div>
+                <div class="character-details">
+                    <h3 id="char-name">Yuji Itadori (Young)</h3>
+                    <div class="char-grade" id="char-grade">GRADE 3</div>
+                    <div class="char-desc" id="char-desc">A talented jujutsu sorcerer with immense physical prowess.</div>
+                    <div class="char-abilities" id="char-abilities">
+                        <div class="ability">Divergent Fist</div>
+                        <div class="ability">Black Flash</div>
+                        <div class="ability">Small Knife</div>
+                    </div>
+                    <div class="char-stats">
+                        <div class="stat-bar">
+                            <span>Power</span>
+                            <div class="bar"><div class="fill" style="width: 80%"></div></div>
+                        </div>
+                        <div class="stat-bar">
+                            <span>Speed</span>
+                            <div class="bar"><div class="fill" style="width: 70%"></div></div>
+                        </div>
+                        <div class="stat-bar">
+                            <span>Range</span>
+                            <div class="bar"><div class="fill" style="width: 50%"></div></div>
+                        </div>
+                        <div class="stat-bar">
+                            <span>Technique</span>
+                            <div class="bar"><div class="fill" style="width: 60%"></div></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="select-controls">
@@ -220,7 +309,7 @@
                     <div class="hud-name" id="hud-name-1">Player 1</div>
                     <div class="health-bar">
                         <div class="health-fill" id="health-1"></div>
-                        <div class="health-text">100/100</div>
+                        <div class="health-text" id="health-text-1">100/100</div>
                     </div>
                     <div class="awake-bar">
                         <div class="awake-fill" id="awake-1"></div>
@@ -237,6 +326,10 @@
                     <div class="round-indicator"></div>
                     <div class="round-indicator"></div>
                 </div>
+                <div class="online-status" id="online-game-status">
+                    <div class="status-dot"></div>
+                    <span>Online</span>
+                </div>
             </div>
             
             <!-- Player 2 HUD -->
@@ -248,7 +341,7 @@
                     <div class="hud-name" id="hud-name-2">Player 2</div>
                     <div class="health-bar">
                         <div class="health-fill" id="health-2"></div>
-                        <div class="health-text">100/100</div>
+                        <div class="health-text" id="health-text-2">100/100</div>
                     </div>
                     <div class="awake-bar">
                         <div class="awake-fill" id="awake-2"></div>
@@ -292,7 +385,35 @@
             <div class="pause-content">
                 <h2>PAUSED</h2>
                 <button class="pause-option" id="resume-btn">RESUME</button>
+                <button class="pause-option" id="settings-game">SETTINGS</button>
                 <button class="pause-option" id="quit-match">QUIT MATCH</button>
+                <div class="online-info">
+                    <div>Room: <span id="pause-room-code">------</span></div>
+                    <div>Opponent: <span id="pause-opponent">Player</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Results -->
+        <div id="game-results" class="hidden">
+            <div class="results-content">
+                <h2 id="results-title">VICTORY!</h2>
+                <div class="results-player">
+                    <div class="results-avatar" id="results-avatar-1"></div>
+                    <div class="results-name" id="results-name-1">Player 1</div>
+                    <div class="results-score" id="results-score-1">2</div>
+                </div>
+                <div class="vs">VS</div>
+                <div class="results-player">
+                    <div class="results-avatar" id="results-avatar-2"></div>
+                    <div class="results-name" id="results-name-2">Player 2</div>
+                    <div class="results-score" id="results-score-2">1</div>
+                </div>
+                <div class="results-controls">
+                    <button class="results-btn" id="rematch-btn">REMATCH</button>
+                    <button class="results-btn" id="lobby-btn">BACK TO LOBBY</button>
+                    <button class="results-btn" id="menu-btn">MAIN MENU</button>
+                </div>
             </div>
         </div>
     </div>
@@ -306,18 +427,28 @@
                 <div class="profile-edit">
                     <div class="form-group">
                         <label for="profile-username">USERNAME</label>
-                        <input type="text" id="profile-username" maxlength="16">
+                        <input type="text" id="profile-username" maxlength="16" placeholder="Enter username">
                         <div class="error" id="username-error"></div>
                     </div>
                     
                     <div class="form-group">
-                        <label>AVATAR</label>
-                        <div class="avatar-upload">
-                            <div class="avatar-preview" id="avatar-preview">
-                                <span class="avatar-letter" id="preview-letter">P</span>
-                            </div>
-                            <input type="file" id="avatar-input" accept="image/*">
-                            <label for="avatar-input" class="upload-btn">CHOOSE IMAGE</label>
+                        <label>AVATAR COLOR</label>
+                        <div class="color-picker" id="color-picker">
+                            <div class="color-option" data-color="#FF6B6B" style="background-color: #FF6B6B"></div>
+                            <div class="color-option" data-color="#4ECDC4" style="background-color: #4ECDC4"></div>
+                            <div class="color-option" data-color="#FFD166" style="background-color: #FFD166"></div>
+                            <div class="color-option" data-color="#06D6A0" style="background-color: #06D6A0"></div>
+                            <div class="color-option" data-color="#118AB2" style="background-color: #118AB2"></div>
+                            <div class="color-option" data-color="#EF476F" style="background-color: #EF476F"></div>
+                            <div class="color-option" data-color="#073B4C" style="background-color: #073B4C"></div>
+                            <div class="color-option" data-color="#7209B7" style="background-color: #7209B7"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>AVATAR PREVIEW</label>
+                        <div class="avatar-preview-large" id="avatar-preview">
+                            <span class="avatar-letter" id="preview-letter">P</span>
                         </div>
                     </div>
                 </div>
@@ -341,12 +472,28 @@
                             <div class="stat-label">Total Fights</div>
                             <div class="stat-value" id="stat-fights">0</div>
                         </div>
+                        <div class="stat">
+                            <div class="stat-label">K.O.s</div>
+                            <div class="stat-value" id="stat-kos">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Best Combo</div>
+                            <div class="stat-value" id="stat-combo">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-matches">
+                        <h4>RECENT MATCHES</h4>
+                        <div class="matches-list" id="matches-list">
+                            <div class="no-matches">No matches played yet</div>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="profile-controls">
                     <button class="save-btn" id="save-profile">SAVE</button>
                     <button class="back-btn" id="profile-back">BACK</button>
+                    <button class="reset-btn" id="reset-stats">RESET STATS</button>
                 </div>
             </div>
         </div>
@@ -372,6 +519,7 @@
                 <button class="tab-btn active" data-tab="controls">CONTROLS</button>
                 <button class="tab-btn" data-tab="gameplay">GAMEPLAY</button>
                 <button class="tab-btn" data-tab="audio">AUDIO</button>
+                <button class="tab-btn" data-tab="online">ONLINE</button>
             </div>
             
             <div class="settings-content">
@@ -379,31 +527,44 @@
                     <div class="control-setting">
                         <span>Move Left:</span>
                         <kbd class="key">A</kbd>
+                        <button class="change-key" data-key="left">CHANGE</button>
                     </div>
                     <div class="control-setting">
                         <span>Move Right:</span>
                         <kbd class="key">D</kbd>
+                        <button class="change-key" data-key="right">CHANGE</button>
                     </div>
                     <div class="control-setting">
                         <span>Jump:</span>
                         <kbd class="key">W</kbd>
+                        <button class="change-key" data-key="jump">CHANGE</button>
                     </div>
                     <div class="control-setting">
                         <span>Crouch:</span>
                         <kbd class="key">S</kbd>
+                        <button class="change-key" data-key="crouch">CHANGE</button>
                     </div>
                     <div class="control-setting">
                         <span>Attack:</span>
-                        <kbd class="key">Left Click</kbd>
+                        <kbd class="key">J</kbd>
+                        <button class="change-key" data-key="attack">CHANGE</button>
                     </div>
                     <div class="control-setting">
-                        <span>Dash:</span>
-                        <kbd class="key">Right Click</kbd>
+                        <span>Special 1:</span>
+                        <kbd class="key">K</kbd>
+                        <button class="change-key" data-key="special1">CHANGE</button>
+                    </div>
+                    <div class="control-setting">
+                        <span>Special 2:</span>
+                        <kbd class="key">L</kbd>
+                        <button class="change-key" data-key="special2">CHANGE</button>
                     </div>
                     <div class="control-setting">
                         <span>Block:</span>
                         <kbd class="key">F</kbd>
+                        <button class="change-key" data-key="block">CHANGE</button>
                     </div>
+                    <button class="reset-controls" id="reset-controls">RESET TO DEFAULT</button>
                 </div>
                 
                 <div class="tab-content" id="gameplay-tab">
@@ -413,6 +574,14 @@
                             <option value="99">99</option>
                             <option value="120">120</option>
                             <option value="60">60</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label for="rounds-to-win">Rounds to Win</label>
+                        <select id="rounds-to-win">
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="5">5</option>
                         </select>
                     </div>
                     <div class="setting">
@@ -427,20 +596,78 @@
                             Screen Shake
                         </label>
                     </div>
+                    <div class="setting">
+                        <label>
+                            <input type="checkbox" id="particles" checked>
+                            Particle Effects
+                        </label>
+                    </div>
+                    <div class="setting">
+                        <label>
+                            <input type="checkbox" id="damage-numbers" checked>
+                            Damage Numbers
+                        </label>
+                    </div>
                 </div>
                 
                 <div class="tab-content" id="audio-tab">
                     <div class="setting">
                         <label for="master-volume">Master Volume</label>
                         <input type="range" id="master-volume" min="0" max="100" value="100">
+                        <span class="volume-value" id="master-value">100%</span>
                     </div>
                     <div class="setting">
                         <label for="music-volume">Music Volume</label>
                         <input type="range" id="music-volume" min="0" max="100" value="80">
+                        <span class="volume-value" id="music-value">80%</span>
                     </div>
                     <div class="setting">
                         <label for="sfx-volume">SFX Volume</label>
                         <input type="range" id="sfx-volume" min="0" max="100" value="100">
+                        <span class="volume-value" id="sfx-value">100%</span>
+                    </div>
+                    <div class="setting">
+                        <label for="voice-volume">Voice Volume</label>
+                        <input type="range" id="voice-volume" min="0" max="100" value="90">
+                        <span class="volume-value" id="voice-value">90%</span>
+                    </div>
+                    <button class="test-sound" id="test-sound">TEST SOUND</button>
+                </div>
+                
+                <div class="tab-content" id="online-tab">
+                    <div class="setting">
+                        <label for="region">Region</label>
+                        <select id="region">
+                            <option value="auto">Auto (Recommended)</option>
+                            <option value="us">North America</option>
+                            <option value="eu">Europe</option>
+                            <option value="asia">Asia</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label>
+                            <input type="checkbox" id="auto-reconnect" checked>
+                            Auto Reconnect
+                        </label>
+                    </div>
+                    <div class="setting">
+                        <label>
+                            <input type="checkbox" id="show-ping" checked>
+                            Show Ping
+                        </label>
+                    </div>
+                    <div class="setting">
+                        <label>
+                            <input type="checkbox" id="chat-enabled" checked>
+                            Enable Chat
+                        </label>
+                    </div>
+                    <div class="connection-test">
+                        <button class="test-connection" id="test-connection">TEST CONNECTION</button>
+                        <div class="test-result hidden" id="connection-result">
+                            <span class="status-dot"></span>
+                            <span>Testing...</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -449,8 +676,29 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <!-- Firebase Configuration Script -->
+    <script>
+        // Firebase Configuration - Replace with your own config
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6UMInZB4kEgpZ02w3rwwK0Wl3kmVjXWo",
+            authDomain: "jujutsu-fighters.firebaseapp.com",
+            databaseURL: "https://jujutsu-fighters-default-rtdb.firebaseio.com",
+            projectId: "jujutsu-fighters",
+            storageBucket: "jujutsu-fighters.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef1234567890abcdef"
+        };
+        
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+        }
+    </script>
+
+    <!-- Game Scripts -->
     <script src="js/utils.js"></script>
     <script src="js/characters.js"></script>
     <script src="js/network.js"></script>
@@ -461,5 +709,8 @@
     <script src="js/effects.js"></script>
     <script src="js/ui.js"></script>
     <script src="assets/sprites.js"></script>
+    
+    <!-- Gamepad Support -->
+    <script src="js/gamepad.js"></script>
 </body>
 </html>
